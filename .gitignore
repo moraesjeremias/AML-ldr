@@ -53,3 +53,7 @@ dkms.conf
 
 # Mac folder artifacts
 .DS_Store
+
+# Secrets
+*.key
+*.crt
