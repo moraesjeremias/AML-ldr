@@ -57,4 +57,5 @@ dkms.conf
 # Secrets
 *.key
 *.crt
+*.pem
 *secrets.h
