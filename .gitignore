@@ -60,3 +60,6 @@ dkms.conf
 *.pem
 *.der
 *.h
+
+#VS Code Artifacts
+*.json
