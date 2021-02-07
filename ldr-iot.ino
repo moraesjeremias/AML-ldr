@@ -29,33 +29,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 
 void setup_wifi() {
-
-  delay(10);
-  // We start by connecting to a WiFi network
   wiFiEspClient.setBufferSizes(512, 512);
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(WIFI_USER);
-
   WiFi.begin(WIFI_USER, WIFI_PSWD);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
   timeClient.begin();
   while (!timeClient.update()) {
     timeClient.forceUpdate();
   }
-
   wiFiEspClient.setX509Time(timeClient.getEpochTime());
-
 }
 
 PubSubClient client(AWS_ENDPOINT, MQTT_PORT, callback, wiFiEspClient);
@@ -63,14 +43,10 @@ PubSubClient client(AWS_ENDPOINT, MQTT_PORT, callback, wiFiEspClient);
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
     if (client.connect("ESPthing")) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("inTopic");
+      client.publish(AWS_IOT_CORE_TOPIC, "Back online - ESP 8266 connected");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -80,8 +56,6 @@ void reconnect() {
       wiFiEspClient.getLastSSLError(buf, 256);
       Serial.print("WiFiClientSecure SSL error: ");
       Serial.println(buf);
-
-      // Wait 5 seconds before retrying
       delay(5000);
     }
   }
@@ -131,8 +105,6 @@ void setup() {
 
   delay(1000);
 
-
-
   if (wiFiEspClient.loadCertificate(cert))
     Serial.println("cert loaded");
   else
@@ -149,8 +121,6 @@ void setup() {
     Serial.println("ca failed");
 
   Serial.print("Heap: "); Serial.println(ESP.getFreeHeap());
-
-
 }
 
 void loop() {
@@ -162,7 +132,6 @@ void loop() {
   ldrInitialReadValue = analogRead(A0);
   delay(1000);
   ldrFinalReadValue = analogRead(A0);
-  
 
   if (ldrFinalReadValue - ldrInitialReadValue > 100) {
     hasCarArrived = true;
