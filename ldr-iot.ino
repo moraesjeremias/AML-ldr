@@ -5,19 +5,10 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
-
-char wifi_ssid[]       = WIFI_USER;
-char wifi_password[]   = WIFI_PSWD;
-char aws_endpoint[]    = AWS_ENDPOINT;
-char aws_key[]         = AWS_ACCESS_KEY;
-char aws_secret[]      = AWS_SECRET_KEY;
-char aws_region[]      = AWS_REGION;
-const char* aws_topic  = AWS_THING_SHADOW;
-int port = MQTT_PORT;
-
 int ldrInitialReadValue;
 int ldrFinalReadValue;
 bool hasCarArrived = false;
+const char* pubSubSuccessMessage = "{\n\t\"sender\": \"esp8266-publisher\",\n\t\"hasCarArrived\": true\n}";
 
 
 WiFiUDP ntpUDP;
@@ -67,7 +58,7 @@ void setup_wifi() {
 
 }
 
-PubSubClient client(aws_endpoint, MQTT_PORT, callback, wiFiEspClient);
+PubSubClient client(AWS_ENDPOINT, MQTT_PORT, callback, wiFiEspClient);
 
 void reconnect() {
   // Loop until we're reconnected
@@ -98,18 +89,87 @@ void reconnect() {
 
 void setup() {
   Serial.begin(9600);
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+
+  setup_wifi();
+  delay(1000);
+  if (!SPIFFS.begin()) {
+    Serial.println("Failed to mount file system");
+    return;
+  }
+
+  Serial.print("Heap: "); Serial.println(ESP.getFreeHeap());
+
+  // Load certificate file
+  File cert = SPIFFS.open("/cert.der", "r");
+  if (!cert) {
+    Serial.println("Failed to open cert file");
+  }
+  else
+    Serial.println("Success to open cert file");
+
+  delay(1000);
+
+  // Load private key file
+  File private_key = SPIFFS.open("/key.der", "r");
+  if (!private_key) {
+    Serial.println("Failed to open private cert file");
+  }
+  else
+    Serial.println("Success to open private cert file");
+
+  delay(1000);
+
+  // Load CA file
+  File ca = SPIFFS.open("/rootCA.der", "r");
+  if (!ca) {
+    Serial.println("Failed to open ca ");
+  }
+  else
+    Serial.println("Success to open ca");
+
+  delay(1000);
+
+
+
+  if (wiFiEspClient.loadCertificate(cert))
+    Serial.println("cert loaded");
+  else
+    Serial.println("cert not loaded");
+
+  if (wiFiEspClient.loadPrivateKey(private_key))
+    Serial.println("private key loaded");
+  else
+    Serial.println("private key not loaded");
+
+  if (wiFiEspClient.loadCACert(ca))
+    Serial.println("ca loaded");
+  else
+    Serial.println("ca failed");
+
+  Serial.print("Heap: "); Serial.println(ESP.getFreeHeap());
+
 
 }
 
 void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
   ldrInitialReadValue = analogRead(A0);
   delay(1000);
   ldrFinalReadValue = analogRead(A0);
+  
 
   if (ldrFinalReadValue - ldrInitialReadValue > 100) {
     hasCarArrived = true;
     Serial.print("Object is approaching");
     Serial.print("\n");
+    Serial.print(hasCarArrived);
+    client.publish(AWS_IOT_CORE_TOPIC, pubSubSuccessMessage);
   }
   delay(100);
 }
