@@ -1,4 +1,5 @@
 #include "ldr_secrets.h"
+// #include "wifi-utils.h"
 #include "FS.h"
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -10,11 +11,9 @@ int ldrFinalReadValue;
 bool hasCarArrived = false;
 const char* pubSubSuccessMessage = "{\n\t\"sender\": \"esp8266-publisher\",\n\t\"hasCarArrived\": true\n}";
 
-
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
-WiFiClientSecure wiFiEspClient;
-
+WiFiClientSecure secureWiFiEspClient;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -29,23 +28,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 
 void setup_wifi() {
-  wiFiEspClient.setBufferSizes(512, 512);
+  secureWiFiEspClient.setBufferSizes(512, 512); 
   WiFi.begin(WIFI_USER, WIFI_PSWD);
   timeClient.begin();
   while (!timeClient.update()) {
     timeClient.forceUpdate();
   }
-  wiFiEspClient.setX509Time(timeClient.getEpochTime());
+  secureWiFiEspClient.setX509Time(timeClient.getEpochTime());
 }
 
-PubSubClient client(AWS_ENDPOINT, MQTT_PORT, callback, wiFiEspClient);
+PubSubClient client(AWS_ENDPOINT, MQTT_PORT, callback, secureWiFiEspClient);
 
 void reconnect() {
-  // Loop until we're reconnected
   while (!client.connected()) {
     if (client.connect("ESPthing")) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
       client.publish(AWS_IOT_CORE_TOPIC, "Back online - ESP 8266 connected");
     } else {
       Serial.print("failed, rc=");
@@ -53,7 +50,7 @@ void reconnect() {
       Serial.println(" try again in 5 seconds");
 
       char buf[256];
-      wiFiEspClient.getLastSSLError(buf, 256);
+      secureWiFiEspClient.getLastSSLError(buf, 256);
       Serial.print("WiFiClientSecure SSL error: ");
       Serial.println(buf);
       delay(5000);
@@ -66,6 +63,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
 
+//   setup_wifi(secureWiFiEspClient, timeClient);
   setup_wifi();
   delay(1000);
   if (!SPIFFS.begin()) {
@@ -75,7 +73,7 @@ void setup() {
 
   Serial.print("Heap: "); Serial.println(ESP.getFreeHeap());
 
-  // Load certificate file
+  
   File cert = SPIFFS.open("/cert.der", "r");
   if (!cert) {
     Serial.println("Failed to open cert file");
@@ -105,17 +103,17 @@ void setup() {
 
   delay(1000);
 
-  if (wiFiEspClient.loadCertificate(cert))
+  if (secureWiFiEspClient.loadCertificate(cert))
     Serial.println("cert loaded");
   else
     Serial.println("cert not loaded");
 
-  if (wiFiEspClient.loadPrivateKey(private_key))
+  if (secureWiFiEspClient.loadPrivateKey(private_key))
     Serial.println("private key loaded");
   else
     Serial.println("private key not loaded");
 
-  if (wiFiEspClient.loadCACert(ca))
+  if (secureWiFiEspClient.loadCACert(ca))
     Serial.println("ca loaded");
   else
     Serial.println("ca failed");
