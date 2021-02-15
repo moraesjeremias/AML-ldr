@@ -43,7 +43,7 @@ void reconnect() {
   while (!client.connected()) {
     if (client.connect("ESPthing")) {
       Serial.println("connected");
-      client.publish(AWS_IOT_CORE_TOPIC, "Back online - ESP 8266 connected");
+      client.publish(AWS_IOT_CORE_STATUS_CHECK_TOPIC, "Back online - ESP 8266 connected");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
