@@ -46,7 +46,7 @@ void reconnect()
 {
     while (!client.connected())
     {
-        if (client.connect("ESPthing"))
+        if (client.connect("esp-8266-ldr-publisher"))
         {
             publishMessageWhenReconnectsToBroker(timeClient.getFormattedDate());
         }
@@ -131,7 +131,6 @@ void setup()
     setup_wifi();
     delay(1000);
     SPIFFSLoading();
-
     if (!client.connected())
     {
         reconnect();
@@ -140,7 +139,7 @@ void setup()
 
 char *jsonPubSubMessageSerialize(bool carState, String zonedDateTime)
 {
-    char serializedPubSubMessage[512];
+    char serializedPubSubMessage[256];
     StaticJsonDocument<128> pubSubJsonSerializable;
     pubSubJsonSerializable["sender"] = "esp8266-publisher";
     pubSubJsonSerializable["hasCarArrived"] = carState;
