@@ -65,12 +65,8 @@ void reconnect()
     }
 }
 
-void setup()
+void SPIFFSLoading()
 {
-    Serial.begin(9600);
-    Serial.setDebugOutput(true);
-    setup_wifi();
-    delay(1000);
     if (!SPIFFS.begin())
     {
         Serial.println("Failed to mount file system");
@@ -126,6 +122,15 @@ void setup()
         Serial.println("ca loaded");
     else
         Serial.println("ca failed");
+}
+
+void setup()
+{
+    Serial.begin(9600);
+    Serial.setDebugOutput(true);
+    setup_wifi();
+    delay(1000);
+    SPIFFSLoading();
 
     if (!client.connected())
     {
@@ -144,7 +149,8 @@ char *jsonPubSubMessageSerialize(bool carState, String zonedDateTime)
     return serializedPubSubMessage;
 }
 
-void publishMessageWhenReconnectsToBroker(String zonedDateTime){
+void publishMessageWhenReconnectsToBroker(String zonedDateTime)
+{
     char reconnectMessage[192];
     StaticJsonDocument<192> pubSubJsonSerializable;
     pubSubJsonSerializable["message"] = "Back online - ESP 8266 connected";
@@ -155,7 +161,6 @@ void publishMessageWhenReconnectsToBroker(String zonedDateTime){
 
     Serial.print("Connected");
     client.publish(AWS_IOT_CORE_STATUS_CHECK_TOPIC, reconnectMessage);
-
 }
 
 void publishMessageWhenCarArrives(int ldrInitialReadValue, int ldrFinalReadValue)
@@ -171,12 +176,10 @@ void publishMessageWhenCarArrives(int ldrInitialReadValue, int ldrFinalReadValue
 
 void loop()
 {
-
     ldrInitialReadValue = analogRead(A0);
     delay(1000);
     ldrFinalReadValue = analogRead(A0);
     publishMessageWhenCarArrives(ldrInitialReadValue, ldrFinalReadValue);
-
     delay(100);
     client.loop();
 }
