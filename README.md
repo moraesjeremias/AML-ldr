@@ -1,4 +1,4 @@
-# ldr-iot
+# AML-ldr
 An automation project for home light appliances
 
 ## Milestones
