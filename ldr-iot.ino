@@ -141,7 +141,7 @@ char *jsonPubSubMessageSerialize(bool carState, String zonedDateTime)
 {
     char serializedPubSubMessage[256];
     StaticJsonDocument<128> pubSubJsonSerializable;
-    pubSubJsonSerializable["sender"] = "esp8266-publisher";
+    pubSubJsonSerializable["sender"] = AWS_IOT_THING_ID;
     pubSubJsonSerializable["hasCarArrived"] = carState;
     pubSubJsonSerializable["timeArrived"] = zonedDateTime;
     serializeJson(pubSubJsonSerializable, serializedPubSubMessage);
@@ -152,14 +152,14 @@ void publishMessageWhenReconnectsToBroker(String zonedDateTime)
 {
     char reconnectMessage[192];
     StaticJsonDocument<192> pubSubJsonSerializable;
-    pubSubJsonSerializable["message"] = "Back online - ESP 8266 connected";
-    pubSubJsonSerializable["sender"] = "esp8266-publisher";
+    pubSubJsonSerializable["message"] = AWS_IOT_RECONNECT_MESSAGE;
+    pubSubJsonSerializable["sender"] = AWS_IOT_THING_ID;
     pubSubJsonSerializable["onlineStatus"] = true;
     pubSubJsonSerializable["timeArrived"] = zonedDateTime;
     serializeJson(pubSubJsonSerializable, reconnectMessage);
 
-    Serial.print("Connected");
     client.publish(AWS_IOT_CORE_STATUS_CHECK_TOPIC, reconnectMessage);
+    Serial.print("Connected");
 }
 
 void publishMessageWhenCarArrives(int ldrInitialReadValue, int ldrFinalReadValue)
