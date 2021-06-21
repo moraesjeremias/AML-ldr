@@ -28,7 +28,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     Serial.println();
 }
 
-void setup_wifi()
+void setupWifi()
 {
     secureWiFiEspClient.setBufferSizes(512, 512);
     WiFi.begin(WIFI_USER, WIFI_PSWD);
@@ -124,17 +124,22 @@ void SPIFFSLoading()
         Serial.println("ca failed");
 }
 
-void setup()
+void reconnectClient()
 {
-    Serial.begin(9600);
-    Serial.setDebugOutput(true);
-    setup_wifi();
-    delay(1000);
-    SPIFFSLoading();
     if (!client.connected())
     {
         reconnect();
     }
+}
+
+void setup()
+{
+    Serial.begin(9600);
+    Serial.setDebugOutput(true);
+    setupWifi();
+    delay(1000);
+    SPIFFSLoading();
+    reconnectClient();
 }
 
 char *jsonPubSubMessageSerialize(bool carState, String zonedDateTime)
@@ -180,5 +185,6 @@ void loop()
     ldrFinalReadValue = analogRead(A0);
     publishMessageWhenCarArrives(ldrInitialReadValue, ldrFinalReadValue);
     delay(100);
+    reconnectClient();
     client.loop();
 }
