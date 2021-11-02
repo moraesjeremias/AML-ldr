@@ -1,0 +1,8 @@
+#define WIFI_USER ""
+#define WIFI_PSWD ""
+#define AWS_IOT_THING_ID ""
+#define AWS_IOT_RECONNECT_MESSAGE ""
+#define AWS_IOT_CORE_TOPIC ""
+#define AWS_ENDPOINT ""
+#define MQTT_PORT 8883
+#define AWS_IOT_CORE_STATUS_CHECK_TOPIC ""

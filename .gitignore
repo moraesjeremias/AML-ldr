@@ -59,7 +59,12 @@ dkms.conf
 *.crt
 *.pem
 *.der
-*.h
+ldr_secrets.h
 
 #VS Code Artifacts
 *.json
+.vscode
+
+# Data folder
+data/
+certs/
